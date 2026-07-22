@@ -260,7 +260,7 @@ function renderChart7d() {
     data: {
       labels,
       datasets: [{
-        label: 'Ventas ($)',
+        label: 'Ventas (G$)',
         data,
         borderColor: '#FFCC00',
         backgroundColor: 'rgba(255,204,0,0.10)',
@@ -273,7 +273,7 @@ function renderChart7d() {
         pointHoverRadius: 8
       }]
     },
-    options: chartOpts({ yPrefix: '$' })
+    options: chartOpts({ yPrefix: 'G$ ' })
   });
 }
 
@@ -508,7 +508,7 @@ function confirmDelCliente(id) {
 
 function exportClientesCSV() {
   if (!clientes.length) { toast('No hay clientes para exportar', 'warning'); return; }
-  const headers = ['Nombre','Teléfono','Email','Productos','Compra Total ($)','Cómo Conoció','Etiquetas','Fecha'];
+  const headers = ['Nombre','Teléfono','Email','Productos','Compra Total (G$)','Cómo Conoció','Etiquetas','Fecha'];
   const rows = clientes.map(c => [
     c.nombre || '',
     c.telefono || '',
@@ -525,7 +525,7 @@ function exportClientesCSV() {
 
 function exportVentasCSV() {
   if (!ventas.length) { toast('No hay ventas para exportar', 'warning'); return; }
-  const headers = ['Cliente','Productos','Total ($)','Fecha'];
+  const headers = ['Cliente','Productos','Total (G$)','Fecha'];
   const rows = ventas.map(v => [
     v.clienteNombre || '',
     (v.productos || []).map(p => `${p.nombre} x${p.cantidad}`).join(' | '),
@@ -958,7 +958,7 @@ function renderChartTendencia() {
     data: {
       labels: semanas,
       datasets: [{
-        label: 'Ingresos ($)',
+        label: 'Ingresos (G$)',
         data: totales,
         borderColor: '#4CAF50',
         backgroundColor: 'rgba(76,175,80,.10)',
@@ -967,7 +967,7 @@ function renderChartTendencia() {
         pointRadius: 5, borderWidth: 2.5
       }]
     },
-    options: chartOpts({ yPrefix: '$' })
+    options: chartOpts({ yPrefix: 'G$ ' })
   });
 }
 
@@ -1060,7 +1060,7 @@ function toast(msg, type = 'info') {
 // UTILIDADES
 // =====================================
 
-/** Formatea dinero con símbolo $ */
+/** Formatea dinero con símbolo G$ */
 function fmtMoney(n) {
   return 'G$ ' + parseFloat(n || 0).toLocaleString('es-PY', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
