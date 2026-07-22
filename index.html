@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CRM completo para Imperio Ferretería — Gestión de clientes, productos y ventas">
+  <title>IMPERIO FERRETERÍA — CRM</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ===== PANTALLA DE CARGA ===== -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="spinner-wrap">
+      <img src="imperio.png" alt="Imperio Ferretería" class="loading-logo" onerror="this.style.display='none'">
+      <div class="spinner"></div>
+      <p class="loading-text">Cargando IMPERIO FERRETERÍA...</p>
+    </div>
+  </div>
+
+  <!-- ===== TOAST CONTAINER ===== -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ===== MODAL CONFIRMAR ===== -->
+  <div id="modal-confirm" class="modal-overlay" style="display:none">
+    <div class="modal-box glass-card">
+      <div class="modal-ico"><i class="fas fa-exclamation-triangle"></i></div>
+      <h3 id="conf-title" style="text-align:center;margin-bottom:8px">¿Confirmar?</h3>
+      <p id="conf-msg" style="text-align:center;color:var(--txt-2);font-size:.875rem">Esta acción no se puede deshacer.</p>
+      <div class="modal-acts">
+        <button class="btn btn-outline" onclick="closeConfirmModal()"><i class="fas fa-times"></i> Cancelar</button>
+        <button class="btn btn-danger" id="conf-btn"><i class="fas fa-trash"></i> Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL CLIENTE ===== -->
+  <div id="modal-cliente" class="modal-overlay" style="display:none">
+    <div class="modal-box modal-lg glass-card">
+      <div class="modal-hdr">
+        <h3 id="mc-title"><i class="fas fa-user-plus" style="color:var(--clr-primary)"></i> Agregar Cliente</h3>
+        <button class="btn-close" onclick="closeClienteModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="form-cliente" novalidate>
+        <input type="hidden" id="mc-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="mc-nombre"><i class="fas fa-user"></i> Nombre Completo *</label>
+            <input type="text" id="mc-nombre" placeholder="Nombre del cliente" required>
+          </div>
+          <div class="form-group">
+            <label for="mc-telefono"><i class="fas fa-phone"></i> Teléfono</label>
+            <input type="tel" id="mc-telefono" placeholder="+595 XXX XXX XXX">
+          </div>
+          <div class="form-group">
+            <label for="mc-email"><i class="fas fa-envelope"></i> Email</label>
+            <input type="email" id="mc-email" placeholder="correo@ejemplo.com">
+          </div>
+          <div class="form-group">
+            <label for="mc-precio"><i class="fas fa-dollar-sign"></i> Precio Total de Compra ($)</label>
+            <input type="number" id="mc-precio" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group full">
+            <label for="mc-productos"><i class="fas fa-box"></i> Productos Comprados</label>
+            <textarea id="mc-productos" placeholder="Ej: Taladro, Brocas, Pintura..." rows="3"></textarea>
+          </div>
+          <div class="form-group full">
+            <label for="mc-como"><i class="fas fa-bullhorn"></i> ¿Cómo conoció Imperio Ferretería?</label>
+            <select id="mc-como">
+              <option value="">-- Seleccionar --</option>
+              <option value="Recomendación de un amigo">Recomendación de un amigo</option>
+              <option value="Anuncio en Internet">Anuncio en Internet</option>
+              <option value="Redes Sociales">Redes Sociales</option>
+              <option value="Pasó por la tienda">Pasó por la tienda</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label><i class="fas fa-tags"></i> Etiquetas / Categorías</label>
+            <div class="tags-wrap">
+              <label class="tag-opt"><input type="checkbox" name="etiqueta" value="Profesional"><span>Profesional</span></label>
+              <label class="tag-opt"><input type="checkbox" name="etiqueta" value="Constructor"><span>Constructor</span></label>
+              <label class="tag-opt"><input type="checkbox" name="etiqueta" value="DIY (Hágalo usted mismo)"><span>DIY</span></label>
+              <label class="tag-opt"><input type="checkbox" name="etiqueta" value="Empresa"><span>Empresa</span></label>
+              <label class="tag-opt"><input type="checkbox" name="etiqueta" value="VIP"><span>⭐ VIP</span></label>
+              <label class="tag-opt"><input type="checkbox" name="etiqueta" value="Cliente Recurrente"><span>Recurrente</span></label>
+              <label class="tag-opt"><input type="checkbox" name="etiqueta" value="Nuevo"><span>Nuevo</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-ftr">
+          <button type="button" class="btn btn-outline" onclick="closeClienteModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary shine" id="mc-submit-btn">
+            <i class="fas fa-save"></i> Guardar Cliente
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL PRODUCTO ===== -->
+  <div id="modal-producto" class="modal-overlay" style="display:none">
+    <div class="modal-box glass-card">
+      <div class="modal-hdr">
+        <h3 id="mp-title"><i class="fas fa-box" style="color:var(--clr-primary)"></i> Agregar Producto</h3>
+        <button class="btn-close" onclick="closeProductoModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <form id="form-producto" novalidate>
+        <input type="hidden" id="mp-id">
+        <div class="form-group" style="margin-bottom:14px">
+          <label for="mp-nombre"><i class="fas fa-tag"></i> Nombre del Producto *</label>
+          <input type="text" id="mp-nombre" placeholder="Ej: Taladro Percutor 700W" required>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label for="mp-categoria"><i class="fas fa-layer-group"></i> Categoría *</label>
+          <select id="mp-categoria" required>
+            <option value="">-- Seleccionar --</option>
+            <option value="Herramientas Eléctricas">Herramientas Eléctricas</option>
+            <option value="Herramientas Manuales">Herramientas Manuales</option>
+            <option value="Pinturas y Acabados">Pinturas y Acabados</option>
+            <option value="Fontanería">Fontanería</option>
+            <option value="Material Eléctrico">Material Eléctrico</option>
+            <option value="Ferretería en General">Ferretería en General</option>
+            <option value="Otros">Otros</option>
+          </select>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="mp-precio"><i class="fas fa-dollar-sign"></i> Precio ($) *</label>
+            <input type="number" id="mp-precio" placeholder="0.00" min="0" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="mp-stock"><i class="fas fa-cubes"></i> Stock *</label>
+            <input type="number" id="mp-stock" placeholder="0" min="0" required>
+          </div>
+        </div>
+        <div class="modal-ftr">
+          <button type="button" class="btn btn-outline" onclick="closeProductoModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary shine">
+            <i class="fas fa-save"></i> Guardar Producto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="app" class="app-container">
+
+    <!-- === SIDEBAR === -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-logo">
+        <img src="imperio.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+        <div class="logo-text">
+          <span class="logo-name">IMPERIO</span>
+          <span class="logo-sub">FERRETERÍA</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="nav-item active" data-section="dashboard">
+            <a href="#"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+          </li>
+          <li class="nav-item" data-section="clientes">
+            <a href="#"><i class="fas fa-users"></i><span>Clientes</span></a>
+          </li>
+          <li class="nav-item" data-section="productos">
+            <a href="#"><i class="fas fa-boxes"></i><span>Productos</span></a>
+          </li>
+          <li class="nav-item" data-section="ventas">
+            <a href="#"><i class="fas fa-shopping-cart"></i><span>Ventas</span></a>
+          </li>
+          <li class="nav-item" data-section="informes">
+            <a href="#"><i class="fas fa-chart-bar"></i><span>Informes</span></a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="firebase-badge" id="firebase-badge">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="firebase-txt">Verificando...</span>
+        </div>
+        <button class="theme-toggle" id="btn-theme" title="Cambiar tema">
+          <i class="fas fa-moon" id="theme-ico"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- === MAIN === -->
+    <main class="main-content">
+
+      <!-- Header -->
+      <header class="top-header glass-card">
+        <div class="hdr-left">
+          <button class="sidebar-toggle" id="btn-sidebar"><i class="fas fa-bars"></i></button>
+          <h2 id="page-title">Dashboard</h2>
+        </div>
+        <div class="hdr-right">
+          <div class="hdr-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="global-search" placeholder="Buscar clientes...">
+          </div>
+          <div class="hdr-date">
+            <i class="fas fa-calendar-alt"></i>
+            <span id="current-date"></span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Contenido -->
+      <div class="content-area">
+
+        <!-- ===== DASHBOARD ===== -->
+        <section id="section-dashboard" class="section active">
+          <div class="section-hdr">
+            <div>
+              <h1>Panel de Control</h1>
+              <p class="section-sub">Resumen general de Imperio Ferretería</p>
+            </div>
+          </div>
+
+          <!-- Métricas -->
+          <div class="metrics-grid">
+            <div class="glass-card metric-card" style="--icon-clr:#4CAF50">
+              <div class="metric-icon"><i class="fas fa-users"></i></div>
+              <div class="metric-info">
+                <span class="metric-label">Total Clientes</span>
+                <span class="metric-val" id="m-clientes">0</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card" style="--icon-clr:#FFCC00">
+              <div class="metric-icon"><i class="fas fa-dollar-sign"></i></div>
+              <div class="metric-info">
+                <span class="metric-label">Ventas del Mes</span>
+                <span class="metric-val" id="m-ventas-mes">$0</span>
+              </div>
+            </div>
+            <div class="glass-card metric-card" style="--icon-clr:#FF6B6B">
+              <div class="metric-icon"><i class="fas fa-crown"></i></div>
+              <div class="metric-info">
+                <span class="metric-label">Mayor Compra</span>
+                <span class="metric-val sm" id="m-top-cliente">Sin datos</span>
+                <span class="metric-extra" id="m-top-cliente-val"></span>
+              </div>
+            </div>
+            <div class="glass-card metric-card" style="--icon-clr:#9B59B6">
+              <div class="metric-icon"><i class="fas fa-star"></i></div>
+              <div class="metric-info">
+                <span class="metric-label">Producto Más Vendido</span>
+                <span class="metric-val sm" id="m-top-prod">Sin datos</span>
+                <span class="metric-extra" id="m-top-prod-qty"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfico + Últimos clientes -->
+          <div class="dash-grid">
+            <div class="glass-card chart-card">
+              <div class="card-hdr">
+                <h3><i class="fas fa-chart-line"></i> Ventas Últimos 7 Días</h3>
+              </div>
+              <canvas id="chart-ventas7d" height="240"></canvas>
+            </div>
+            <div class="glass-card recents-card">
+              <div class="card-hdr">
+                <h3><i class="fas fa-user-plus"></i> Últimos Clientes</h3>
+                <button class="btn btn-sm btn-outline" onclick="navigateTo('clientes')">Ver todos</button>
+              </div>
+              <div id="recents-list" class="recents-list">
+                <p class="empty-txt">No hay clientes registrados aún.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== CLIENTES ===== -->
+        <section id="section-clientes" class="section">
+          <div class="section-hdr">
+            <div>
+              <h1>Gestión de Clientes</h1>
+              <p class="section-sub">Administra tu cartera de clientes</p>
+            </div>
+            <div class="section-acts">
+              <button class="btn btn-outline" onclick="exportClientesCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+              <button class="btn btn-primary shine" onclick="openClienteModal()"><i class="fas fa-plus"></i> Agregar Cliente</button>
+            </div>
+          </div>
+
+          <!-- Filtros -->
+          <div class="glass-card filters-card">
+            <div class="filters-grid">
+              <div class="filter-g">
+                <label><i class="fas fa-search"></i> Buscar</label>
+                <input type="text" id="f-buscar" placeholder="Nombre, teléfono, email..." oninput="applyFilters()">
+              </div>
+              <div class="filter-g">
+                <label><i class="fas fa-tag"></i> Etiqueta</label>
+                <select id="f-etiqueta" onchange="applyFilters()">
+                  <option value="">Todas</option>
+                  <option value="Profesional">Profesional</option>
+                  <option value="Constructor">Constructor</option>
+                  <option value="DIY (Hágalo usted mismo)">DIY</option>
+                  <option value="Empresa">Empresa</option>
+                  <option value="VIP">VIP</option>
+                  <option value="Cliente Recurrente">Recurrente</option>
+                  <option value="Nuevo">Nuevo</option>
+                </select>
+              </div>
+              <div class="filter-g">
+                <label><i class="fas fa-bullhorn"></i> Cómo conoció</label>
+                <select id="f-canal" onchange="applyFilters()">
+                  <option value="">Todos</option>
+                  <option value="Recomendación de un amigo">Recomendación</option>
+                  <option value="Anuncio en Internet">Internet</option>
+                  <option value="Redes Sociales">Redes Sociales</option>
+                  <option value="Pasó por la tienda">Tienda</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="filter-g">
+                <label><i class="fas fa-sort"></i> Ordenar por</label>
+                <select id="f-orden" onchange="applyFilters()">
+                  <option value="nombre">Nombre A-Z</option>
+                  <option value="fecha">Más reciente</option>
+                  <option value="precio">Mayor compra</option>
+                </select>
+              </div>
+              <div class="filter-g">
+                <label><i class="fas fa-dollar-sign"></i> Monto mín. ($)</label>
+                <input type="number" id="f-min" placeholder="0" min="0" oninput="applyFilters()">
+              </div>
+              <div class="filter-g">
+                <label><i class="fas fa-dollar-sign"></i> Monto máx. ($)</label>
+                <input type="number" id="f-max" placeholder="Sin límite" min="0" oninput="applyFilters()">
+              </div>
+            </div>
+            <button class="btn btn-xs btn-outline" onclick="clearFilters()"><i class="fas fa-times"></i> Limpiar filtros</button>
+          </div>
+
+          <!-- Tabla -->
+          <div class="glass-card table-card">
+            <div class="table-info" id="cli-count">0 clientes</div>
+            <div class="table-wrap">
+              <table id="cli-table">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Contacto</th>
+                    <th>Compra Total</th>
+                    <th>Etiquetas</th>
+                    <th>Cómo Conoció</th>
+                    <th>Registrado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="cli-tbody"></tbody>
+              </table>
+            </div>
+            <div id="cli-empty" class="empty-box" style="display:none">
+              <i class="fas fa-users"></i>
+              <p>No hay clientes que coincidan con los filtros.</p>
+              <button class="btn btn-primary" onclick="openClienteModal()">Agregar primer cliente</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== PRODUCTOS ===== -->
+        <section id="section-productos" class="section">
+          <div class="section-hdr">
+            <div>
+              <h1>Gestión de Productos</h1>
+              <p class="section-sub">Inventario y catálogo de la ferretería</p>
+            </div>
+            <div class="section-acts">
+              <button class="btn btn-primary shine" onclick="openProductoModal()"><i class="fas fa-plus"></i> Agregar Producto</button>
+            </div>
+          </div>
+
+          <!-- Filtros productos -->
+          <div class="glass-card filters-card">
+            <div class="filters-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+              <div class="filter-g">
+                <label><i class="fas fa-search"></i> Buscar producto</label>
+                <input type="text" id="p-buscar" placeholder="Nombre del producto..." oninput="renderProductos()">
+              </div>
+              <div class="filter-g">
+                <label><i class="fas fa-layer-group"></i> Categoría</label>
+                <select id="p-cat" onchange="renderProductos()">
+                  <option value="">Todas las categorías</option>
+                  <option value="Herramientas Eléctricas">Herramientas Eléctricas</option>
+                  <option value="Herramientas Manuales">Herramientas Manuales</option>
+                  <option value="Pinturas y Acabados">Pinturas y Acabados</option>
+                  <option value="Fontanería">Fontanería</option>
+                  <option value="Material Eléctrico">Material Eléctrico</option>
+                  <option value="Ferretería en General">Ferretería en General</option>
+                  <option value="Otros">Otros</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="prods-grid" class="prods-grid"></div>
+          <div id="prods-empty" class="empty-box" style="display:none">
+            <i class="fas fa-boxes"></i>
+            <p>No hay productos registrados aún.</p>
+            <button class="btn btn-primary" onclick="openProductoModal()">Agregar primer producto</button>
+          </div>
+        </section>
+
+        <!-- ===== VENTAS ===== -->
+        <section id="section-ventas" class="section">
+          <div class="section-hdr">
+            <div>
+              <h1>Registro de Ventas</h1>
+              <p class="section-sub">Registra ventas y consulta el historial</p>
+            </div>
+          </div>
+
+          <div class="ventas-grid">
+            <!-- Formulario nueva venta -->
+            <div class="glass-card venta-form-card">
+              <div class="card-hdr">
+                <h3><i class="fas fa-plus-circle"></i> Nueva Venta</h3>
+              </div>
+              <form id="form-venta" novalidate>
+                <div class="form-group" style="margin-bottom:12px">
+                  <label for="v-cliente"><i class="fas fa-user"></i> Seleccionar Cliente *</label>
+                  <select id="v-cliente" onchange="onClienteChange()">
+                    <option value="">-- Seleccionar cliente --</option>
+                  </select>
+                </div>
+
+                <!-- Preview cliente -->
+                <div id="v-preview" class="client-preview glass-card" style="display:none;margin-bottom:12px">
+                  <div class="preview-left">
+                    <i class="fas fa-user-circle"></i>
+                    <div>
+                      <span class="preview-name" id="v-prev-name"></span>
+                      <small class="preview-sub" id="v-prev-sub"></small>
+                    </div>
+                  </div>
+                  <div class="vip-pill" id="v-vip-badge" style="display:none">
+                    <i class="fas fa-crown"></i> VIP
+                  </div>
+                </div>
+
+                <!-- Agregar producto -->
+                <div class="form-group" style="margin-bottom:8px">
+                  <label><i class="fas fa-box"></i> Agregar Productos</label>
+                  <div class="prod-selector">
+                    <select id="v-prod-sel">
+                      <option value="">-- Producto --</option>
+                    </select>
+                    <input type="number" class="qty-input" id="v-qty" min="1" value="1" placeholder="Cant.">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addToCart()">
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Sugerencias IA -->
+                <div id="ai-box" class="ai-box" style="display:none">
+                  <div class="ai-hdr"><i class="fas fa-robot"></i> Sugerencias IA para este cliente:</div>
+                  <div id="ai-chips"></div>
+                </div>
+
+                <!-- Carrito -->
+                <div id="cart-list" class="cart-list"></div>
+
+                <!-- Total -->
+                <div class="glass-card venta-total-row">
+                  <span style="font-weight:600">TOTAL:</span>
+                  <span class="total-val" id="v-total">$0.00</span>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:12px">
+                  <button type="button" class="btn btn-outline" style="flex:1" onclick="clearVenta()">
+                    <i class="fas fa-undo"></i> Limpiar
+                  </button>
+                  <button type="submit" class="btn btn-primary shine" style="flex:2">
+                    <i class="fas fa-check-circle"></i> Registrar Venta
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Historial -->
+            <div class="glass-card">
+              <div class="card-hdr">
+                <h3><i class="fas fa-history"></i> Historial de Ventas</h3>
+              </div>
+              <div id="hist-list" class="hist-list">
+                <div class="empty-box">
+                  <i class="fas fa-shopping-cart"></i>
+                  <p>No hay ventas registradas aún.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== INFORMES ===== -->
+        <section id="section-informes" class="section">
+          <div class="section-hdr">
+            <div>
+              <h1>Informes y Análisis</h1>
+              <p class="section-sub">Estadísticas detalladas del negocio</p>
+            </div>
+            <div class="section-acts">
+              <button class="btn btn-outline" onclick="exportClientesCSV()"><i class="fas fa-file-csv"></i> Clientes</button>
+              <button class="btn btn-outline" onclick="exportVentasCSV()"><i class="fas fa-file-csv"></i> Ventas</button>
+            </div>
+          </div>
+
+          <div class="informes-grid">
+            <div class="glass-card chart-card">
+              <div class="card-hdr"><h3><i class="fas fa-chart-pie"></i> Canal de Captación</h3></div>
+              <canvas id="chart-canal" height="220"></canvas>
+            </div>
+            <div class="glass-card chart-card">
+              <div class="card-hdr"><h3><i class="fas fa-trophy"></i> Productos Más Vendidos</h3></div>
+              <canvas id="chart-prods" height="220"></canvas>
+            </div>
+            <div class="glass-card chart-card">
+              <div class="card-hdr"><h3><i class="fas fa-tags"></i> Clientes por Tipo</h3></div>
+              <canvas id="chart-tipos" height="220"></canvas>
+            </div>
+            <div class="glass-card chart-card">
+              <div class="card-hdr"><h3><i class="fas fa-chart-area"></i> Tendencia Semanal</h3></div>
+              <canvas id="chart-tendencia" height="220"></canvas>
+            </div>
+          </div>
+
+          <!-- Clientes VIP -->
+          <div class="glass-card" style="margin-top:0">
+            <div class="card-hdr">
+              <h3><i class="fas fa-crown"></i> Clientes VIP <small style="color:var(--txt-3);font-weight:400">(compra total &gt; $500)</small></h3>
+            </div>
+            <div id="vip-grid" class="vip-grid">
+              <p class="empty-txt">No hay clientes VIP aún.</p>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /content-area -->
+    </main>
+  </div><!-- /app -->
+
+  <script src="app.js"></script>
+</body>
+</html>
