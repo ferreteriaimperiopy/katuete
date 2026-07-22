@@ -353,8 +353,8 @@ async function handleClienteSubmit(e) {
   let   etiquetas = [...document.querySelectorAll('[name="etiqueta"]:checked')].map(cb => cb.value);
   const precio    = parseFloat(document.getElementById('mc-precio').value) || 0;
 
-  // Auto-VIP si supera $500
-  if (precio > 500 && !etiquetas.includes('VIP')) etiquetas.push('VIP');
+  // Auto-VIP si supera G$ 500.000
+  if (precio > 500000 && !etiquetas.includes('VIP')) etiquetas.push('VIP');
 
   const data = {
     nombre,
@@ -681,7 +681,7 @@ function onClienteChange() {
   document.getElementById('v-prev-sub').textContent  = c.email || c.telefono || '';
   preview.style.display = 'flex';
 
-  const isVip = (c.precioTotal || 0) > 500 || (c.etiquetas || []).includes('VIP');
+  const isVip = (c.precioTotal || 0) > 500000 || (c.etiquetas || []).includes('VIP');
   vipBadge.style.display = isVip ? 'flex' : 'none';
 
   showAISugg(c);
@@ -814,7 +814,7 @@ async function handleVentaSubmit(e) {
     const newProds   = [...new Set([...prevProds, ...cart.map(p => p.nombre)])];
     const newTotal   = (cliente?.precioTotal || 0) + total;
     const etiquetas  = [...(cliente?.etiquetas || [])];
-    if (newTotal > 500 && !etiquetas.includes('VIP')) etiquetas.push('VIP');
+    if (newTotal > 500000 && !etiquetas.includes('VIP')) etiquetas.push('VIP');
 
     await DB.update('clientes', clienteId, {
       productos: newProds,
@@ -973,10 +973,10 @@ function renderChartTendencia() {
 
 function renderVIPList() {
   const el   = document.getElementById('vip-grid');
-  const vips = clientes.filter(c => (c.precioTotal || 0) > 500 || (c.etiquetas || []).includes('VIP'))
+  const vips = clientes.filter(c => (c.precioTotal || 0) > 500000 || (c.etiquetas || []).includes('VIP'))
                        .sort((a, b) => (b.precioTotal || 0) - (a.precioTotal || 0));
 
-  if (!vips.length) { el.innerHTML = '<p class="empty-txt">No hay clientes VIP aún. (Compra total > $500)</p>'; return; }
+  if (!vips.length) { el.innerHTML = '<p class="empty-txt">No hay clientes VIP aún. (Compra total &gt; G$ 500.000)</p>'; return; }
 
   el.innerHTML = vips.map(c => `
     <div class="vip-item">
@@ -999,7 +999,7 @@ function sendWhatsApp(id) {
   if (!c) return;
 
   const tel    = (c.telefono || '').replace(/\D/g, '');
-  const isVip  = (c.precioTotal || 0) > 500 || (c.etiquetas || []).includes('VIP');
+  const isVip  = (c.precioTotal || 0) > 500000 || (c.etiquetas || []).includes('VIP');
   const prods  = Array.isArray(c.productos) ? c.productos.slice(0, 2).join(' y ') : '';
   const nombre = c.nombre.split(' ')[0]; // Primer nombre
 
@@ -1062,7 +1062,7 @@ function toast(msg, type = 'info') {
 
 /** Formatea dinero con símbolo $ */
 function fmtMoney(n) {
-  return '$' + parseFloat(n || 0).toLocaleString('es-PY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return 'G$ ' + parseFloat(n || 0).toLocaleString('es-PY', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 function fmtDate(str) {

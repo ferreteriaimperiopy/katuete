@@ -74,7 +74,7 @@
             <input type="email" id="mc-email" placeholder="correo@ejemplo.com">
           </div>
           <div class="form-group">
-            <label for="mc-precio"><i class="fas fa-dollar-sign"></i> Precio Total de Compra ($)</label>
+            <label for="mc-precio"><i class="fas fa-dollar-sign"></i> Precio Total de Compra (G$)</label>
             <input type="number" id="mc-precio" placeholder="0.00" min="0" step="0.01">
           </div>
           <div class="form-group full">
@@ -143,7 +143,7 @@
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label for="mp-precio"><i class="fas fa-dollar-sign"></i> Precio ($) *</label>
+            <label for="mp-precio"><i class="fas fa-dollar-sign"></i> Precio (G$) *</label>
             <input type="number" id="mp-precio" placeholder="0.00" min="0" step="0.01" required>
           </div>
           <div class="form-group">
@@ -251,7 +251,7 @@
               <div class="metric-icon"><i class="fas fa-dollar-sign"></i></div>
               <div class="metric-info">
                 <span class="metric-label">Ventas del Mes</span>
-                <span class="metric-val" id="m-ventas-mes">$0</span>
+                <span class="metric-val" id="m-ventas-mes">G$ 0</span>
               </div>
             </div>
             <div class="glass-card metric-card" style="--icon-clr:#FF6B6B">
@@ -345,11 +345,11 @@
                 </select>
               </div>
               <div class="filter-g">
-                <label><i class="fas fa-dollar-sign"></i> Monto mín. ($)</label>
+                <label><i class="fas fa-dollar-sign"></i> Monto mín. (G$)</label>
                 <input type="number" id="f-min" placeholder="0" min="0" oninput="applyFilters()">
               </div>
               <div class="filter-g">
-                <label><i class="fas fa-dollar-sign"></i> Monto máx. ($)</label>
+                <label><i class="fas fa-dollar-sign"></i> Monto máx. (G$)</label>
                 <input type="number" id="f-max" placeholder="Sin límite" min="0" oninput="applyFilters()">
               </div>
             </div>
@@ -489,7 +489,7 @@
                 <!-- Total -->
                 <div class="glass-card venta-total-row">
                   <span style="font-weight:600">TOTAL:</span>
-                  <span class="total-val" id="v-total">$0.00</span>
+                  <span class="total-val" id="v-total">G$ 0</span>
                 </div>
 
                 <div style="display:flex;gap:10px;margin-top:12px">
@@ -553,7 +553,7 @@
           <!-- Clientes VIP -->
           <div class="glass-card" style="margin-top:0">
             <div class="card-hdr">
-              <h3><i class="fas fa-crown"></i> Clientes VIP <small style="color:var(--txt-3);font-weight:400">(compra total &gt; $500)</small></h3>
+              <h3><i class="fas fa-crown"></i> Clientes VIP <small style="color:var(--txt-3);font-weight:400">(compra total &gt; G$ 500.000)</small></h3>
             </div>
             <div id="vip-grid" class="vip-grid">
               <p class="empty-txt">No hay clientes VIP aún.</p>
